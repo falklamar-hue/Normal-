@@ -1,0 +1,30 @@
+{
+  "facilities": [
+    {
+      "name": "Oppdrettsanlegg Frøya Nord",
+      "latitude": 63.7070,
+      "longitude": 8.7410
+    },
+    {
+      "name": "Oppdrettsanlegg Hitra Vest",
+      "latitude": 63.5510,
+      "longitude": 8.6350
+    }
+  ],
+  "email": {
+    "from": "varsling@example.no",
+    "to": "vakt@example.no",
+    "smtp_host": "smtp.example.no",
+    "smtp_port": 587,
+    "starttls": true,
+    "username": "smtp-bruker",
+    "password": "smtp-passord"
+  },
+  "watch": {
+    "ais_endpoint": "https://din-ais-kilde.example/api/v1/vessels",
+    "radius_km": 8.0,
+    "interval_seconds": 300,
+    "cooldown_seconds": 1800,
+    "vessel_keywords": ["kystvakt", "coast guard", "kv "]
+  }
+}
