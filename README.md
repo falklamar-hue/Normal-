@@ -6,19 +6,44 @@ Dette prosjektet gir deg et enkelt program for medieovervåkning:
 - Filtrer treff innenfor et gitt tidsrom.
 - Lagre autosøk som kjøres daglig.
 - Send rapport på e-post når autosøket trigges.
+- Bruk et webgrensesnitt hvis du vil slippe terminalkommandoer.
 
 ## Krav
 
 - Python 3.10+
 - Internett-tilgang for å hente RSS fra Google News
 
-## Kom i gang
+## Start webgrensesnitt (anbefalt)
+
+Kjør:
+
+```bash
+python web_ui.py
+```
+
+Åpne deretter i nettleseren:
+
+```text
+http://localhost:8080
+```
+
+I webgrensesnittet kan du:
+
+- kjøre engangssøk,
+- lagre daglig autosøk,
+- se oversikt over lagrede autosøk.
+
+## CLI (valgfritt)
+
+Hvis du heller vil bruke kommandolinje kan du gjøre det slik:
+
+### Kom i gang
 
 ```bash
 python media_monitor.py init-db
 ```
 
-## Engangssøk
+### Engangssøk
 
 ```bash
 python media_monitor.py search \
@@ -27,7 +52,7 @@ python media_monitor.py search \
   --end "2026-02-19T23:59:00+00:00"
 ```
 
-## Lagre daglig autosøk
+### Lagre daglig autosøk
 
 Eksempel: send daglig rapport kl 07:30 UTC for siste 24 timer.
 
@@ -39,7 +64,7 @@ python media_monitor.py add-autosok \
   --email "deg@eksempel.no"
 ```
 
-## Konfigurer e-post
+## Konfigurer e-post (for autosending)
 
 Lag en `smtp_config.json`:
 
@@ -54,7 +79,7 @@ Lag en `smtp_config.json`:
 }
 ```
 
-## Kjør scheduler
+## Kjør scheduler for daglig utsending
 
 ```bash
 python media_monitor.py run-scheduler --config smtp_config.json
