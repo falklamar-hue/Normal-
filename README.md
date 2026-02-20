@@ -1,93 +1,104 @@
-# Medieovervåkning
+# Medieovervåkning (Desktop MVP)
 
-Dette prosjektet gir deg et enkelt program for medieovervåkning:
+Et komplett førsteutkast til en Windows desktop-app for medieovervåkning med PySide6 GUI, RSS-kilder, lagrede søk, rapportgenerator og SMTP-utsending.
 
-- Søk på et søkeord.
-- Filtrer treff innenfor et gitt tidsrom.
-- Lagre autosøk som kjøres daglig.
-- Send rapport på e-post når autosøket trigges.
-- Bruk et webgrensesnitt hvis du vil slippe terminalkommandoer.
+## Arkitektur (moduler)
 
-## Krav
+- `main.py` – oppstart av app, dependency wiring, scheduler-start/stopp.
+- `app/database.py` – SQLite-oppsett + settings-lagring.
+- `app/models.py` – dataklasser (`Article`, `SavedSearch`, `ReportConfig`).
+- `app/sources.py` – RSS-kilde-lag (henting + normalisering til `Article`).
+- `app/search_engine.py` – matchlogikk, fraser/ord-parser, deduplisering via cache-nøkler.
+- `app/services.py` – CRUD for lagrede søk og rapportoppsett.
+- `app/reporting.py` – generering/eksport av HTML-rapport med klikkbare lenker.
+- `app/mailer.py` – SMTP-sending (HTML-epost) + test-epost.
+- `app/scheduler_service.py` – APScheduler bakgrunnsjobber (daglig/ukentlig/månedlig).
+- `app/ui/main_window.py` – GUI med fanene:
+  - Søk & treff
+  - Automatiske søk
+  - Rapporter
+  - Innstillinger
 
-- Python 3.10+
-- Internett-tilgang for å hente RSS fra Google News
+## Funksjoner i MVP
 
-## Start webgrensesnitt (anbefalt)
+- Manuelt søk med inkluder-/ekskluder-ord.
+- Støtte for fraser med `"anførselstegn"` og ellers splitting på komma/mellomrom.
+- Case-insensitive match.
+- Inkluder-logikk = AND (alle inkluder-ord må finnes i tittel/sammendrag).
+- Ekskluder-logikk = NONE (ingen ekskluder-ord kan finnes).
+- Deduplisering:
+  - Primært på URL.
+  - Hvis URL mangler: `title + dato + source`.
+- Resultatgrid med dato, kilde, tittel, link.
+- Dobbeltklikk på rad åpner link i nettleser.
+- Sortering i tabell.
+- Eksport til HTML-rapport.
+- Lagring i SQLite (`media_monitor.db`).
+- Rapportoppsett med frekvens, tidspunkt, mottaker og valgte lagrede søk.
+- SMTP testknapp og scheduler som kjører mens appen er åpen.
+- Logging til `logs/app.log`.
 
-Kjør:
+## Installasjon (Windows)
 
-```bash
-python web_ui.py
+1. Installer Python 3.11+.
+2. Åpne PowerShell i prosjektmappen.
+3. Opprett virtuelt miljø:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-Åpne deretter i nettleseren:
+4. Installer avhengigheter:
+
+```powershell
+pip install -r requirements.txt
+```
+
+## Kjør appen
+
+```powershell
+python main.py
+```
+
+## Standard RSS-kilder (default)
+
+Disse legges inn første gang:
+
+- Reuters World
+- BBC World
+- AP Top News
+
+De kan endres i **Innstillinger → RSS-kilder** med format per linje:
 
 ```text
-http://localhost:8080
+Navn|https://feed-url|1
 ```
 
-I webgrensesnittet kan du:
+- `1` = aktiv, `0` = deaktivert.
 
-- kjøre engangssøk,
-- lagre daglig autosøk,
-- se oversikt over lagrede autosøk.
+Eksempel:
 
-## CLI (valgfritt)
-
-Hvis du heller vil bruke kommandolinje kan du gjøre det slik:
-
-### Kom i gang
-
-```bash
-python media_monitor.py init-db
+```text
+Reuters World|https://feeds.reuters.com/Reuters/worldNews|1
+NRK Siste nytt|https://www.nrk.no/toppsaker.rss|1
+Min interne feed|https://example.com/rss.xml|0
 ```
 
-### Engangssøk
+## E-postoppsett
 
-```bash
-python media_monitor.py search \
-  --keyword "Equinor" \
-  --start "2026-02-01T00:00:00+00:00" \
-  --end "2026-02-19T23:59:00+00:00"
-```
+I **Innstillinger → E-post (SMTP)** legger du inn:
 
-### Lagre daglig autosøk
+- Host (f.eks. `smtp.gmail.com`)
+- Port (vanligvis `465` for SSL)
+- Bruker
+- App-passord
+- Fra-adresse
 
-Eksempel: send daglig rapport kl 07:30 UTC for siste 24 timer.
+Test med **Rapporter → Send test-epost**.
 
-```bash
-python media_monitor.py add-autosok \
-  --keyword "Equinor" \
-  --time "07:30" \
-  --period-hours 24 \
-  --email "deg@eksempel.no"
-```
+## Viktige notater
 
-## Konfigurer e-post (for autosending)
-
-Lag en `smtp_config.json`:
-
-```json
-{
-  "smtp": {
-    "host": "smtp.gmail.com",
-    "port": 465,
-    "user": "din-bruker@gmail.com",
-    "password": "app-passord"
-  }
-}
-```
-
-## Kjør scheduler for daglig utsending
-
-```bash
-python media_monitor.py run-scheduler --config smtp_config.json
-```
-
-Scheduleren sjekker hvert minutt om noen regler skal kjøres.
-
-## Merk
-
-- Klokkeslett for autosøk lagres i UTC.
-- Google News RSS har begrenset historikk. Programmet filtrerer tidsrommet på artiklene som faktisk kommer fra feeden.
+- Appen bruker RSS (ikke scraping bak betalingsmur).
+- Scheduler kjører kun mens appen er åpen (MVP).
+- PDF-eksport er ikke implementert i MVP; HTML-eksport er implementert.
